@@ -23,6 +23,12 @@ Docs:
 
 ## Services
 
+<!-- no toc -->
+- [`app` service](#app-service)
+- [`postgres` service](#postgres-service)
+- [`pgadmin` service](#pgadmin-service)
+- [`caddy` service](#caddy-service)
+
 ### `app` service
 
 The `app` service runs the [backend web server](./web-infrastructure.md#web-server).
