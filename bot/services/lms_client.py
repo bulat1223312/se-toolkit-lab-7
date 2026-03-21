@@ -10,26 +10,20 @@ class LmsClient:
         }
 
     def _request(self, endpoint: str) -> Optional[Dict[str, Any]]:
-        """Выполняет GET-запрос и возвращает JSON или None при ошибке."""
-        try:
-            url = f"{self.base_url}{endpoint}"
-            resp = requests.get(url, headers=self.headers, timeout=5)
-            resp.raise_for_status()
-            return resp.json()
-        except requests.exceptions.RequestException as e:
-            # Сохраняем детали ошибки для дальнейшего форматирования
-            raise  # Мы перехватим выше и преобразуем
+        url = f"{self.base_url}{endpoint}"
+        resp = requests.get(url, headers=self.headers, timeout=5)
+        resp.raise_for_status()
+        return resp.json()
 
-    def get_items(self) -> Optional[List[Dict]]:
-        """Возвращает список всех items или None при ошибке."""
-        try:
-            return self._request('/items/')
-        except requests.exceptions.RequestException as e:
-            raise
+    def get_items(self) -> List[Dict]:
+        """Возвращает список всех items (лабораторные и задачи)."""
+        return self._request('/items/')
 
-    def get_pass_rates(self, lab_id: str) -> Optional[Dict]:
-        """Возвращает pass rates для лабораторной или None при ошибке."""
-        try:
-            return self._request(f'/analytics/pass-rates?lab={lab_id}')
-        except requests.exceptions.RequestException as e:
-            raise
+    def get_labs(self) -> List[Dict]:
+        """Возвращает только лабораторные работы (type == 'lab')."""
+        items = self.get_items()
+        return [item for item in items if item.get('type') == 'lab']
+
+    def get_pass_rates(self, lab_id: str) -> Dict:
+        """Возвращает словарь с pass rates для лабораторной."""
+        return self._request(f'/analytics/pass-rates?lab={lab_id}')
