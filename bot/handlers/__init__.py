@@ -1,3 +1,3 @@
-from .base import start, help, health, scores, labs
+from .base import start, help, health, labs, scores
 
-__all__ = ["start", "help", "health", "scores", "labs"]
+__all__ = ["start", "help", "health", "labs", "scores"]
