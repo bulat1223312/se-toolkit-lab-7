@@ -92,6 +92,26 @@ services:
 volumes:
   postgres_data:
 
+  bot:
+    build:
+      context: ./bot
+    container_name: telegram-bot
+    restart: unless-stopped
+    environment:
+      BOT_TOKEN: ${BOT_TOKEN}
+      LMS_API_BASE_URL: ${LMS_API_BASE_URL}
+      LMS_API_KEY: ${LMS_API_KEY}
+      LLM_API_BASE_URL: ${LLM_API_BASE_URL}
+      LLM_API_KEY: ${LLM_API_KEY}
+      LLM_API_MODEL: ${LLM_API_MODEL}
+    networks:
+      - default
+    depends_on:
+      - backend
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+
 networks:
   lms-network:
     name: lms-network
