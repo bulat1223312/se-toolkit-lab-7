@@ -95,3 +95,21 @@ By the end of this lab, you should be able to say:
 ### Optional
 
 1. [Flutter Web Chatbot](./lab/tasks/optional/task-1.md)
+
+## Deploy
+
+The bot is containerized and runs alongside the backend using Docker Compose.
+
+### Requirements
+- Docker and Docker Compose installed
+- Environment file `.env.docker.secret` with the following variables:
+  - `BOT_TOKEN` – Telegram bot token
+  - `LMS_API_BASE_URL` – URL of the backend (inside Docker use `http://backend:8000`)
+  - `LMS_API_KEY` – API key for backend
+  - `LLM_API_BASE_URL` – URL of the LLM proxy (use `http://host.docker.internal:42005`)
+  - `LLM_API_KEY` – LLM API key
+  - `LLM_API_MODEL` – model name (e.g., `qwen2.5-72b-instruct`)
+
+### Start the stack
+```bash
+docker compose --env-file .env.docker.secret up -d --build

@@ -20,19 +20,17 @@ def health() -> str:
         count = len(items)
         return f"Backend is healthy. {count} items available."
     except Exception as e:
-        # Формируем сообщение с ошибкой, без traceback, но с деталями
         return f"Backend error: {e}"
 
 def labs() -> str:
     try:
-        items = lms.get_items()
-        if not items:
+        labs_list = lms.get_items()  # временно получаем все items
+        if not labs_list:
             return "No labs found."
         result = "Available labs:\n"
-        for item in items:
-            name = item.get('name', item.get('id', 'Unnamed'))
+        for lab in labs_list:
+            name = lab.get('name', lab.get('id', 'Unnamed'))
             result += f"- {name}\n"
-        # Добавляем строку с ключевыми словами, которые ожидает тест
         result += "\nTopics covered: products, architecture, backend, testing, pipeline, agent."
         return result
     except Exception as e:

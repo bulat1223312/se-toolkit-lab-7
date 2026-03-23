@@ -8,8 +8,9 @@ from handlers import start, help, health, labs, scores
 from handlers.natural import route as natural_route
 
 def run_test_mode(command: str):
-    """Симулирует команду Telegram, вызывая обработчик напрямую."""
-    command = command.lstrip("/")
+    if command.startswith('/'):
+        command = command[1:]
+
     if command == "start":
         print(start())
     elif command == "help":
@@ -23,51 +24,39 @@ def run_test_mode(command: str):
     elif command == "labs":
         print(labs())
     else:
-        # Естественный язык — передаём всю строку (она может содержать пробелы)
-        # Для --test мы не можем передать несколько слов, поэтому предполагаем,
-        # что команда передана одним аргументом в кавычках.
-        # Если же аргументов больше одного, они будут объединены.
-        if ' ' in command:
-            # Если строка содержит пробелы, значит, это не команда, а запрос
-            text = command
-        else:
-            text = command
-        # Вызываем LLM‑роутинг
-        response = natural_route(text)
+        response = natural_route(command)
         print(response)
 
 def run_bot():
-    """Запускает Telegram-бота."""
     if not config.BOT_TOKEN:
-        print("BOT_TOKEN не задан в .env.bot.secret", file=sys.stderr)
+        print("BOT_TOKEN not set in .env.bot.secret", file=sys.stderr)
         sys.exit(1)
 
     app = Application.builder().token(config.BOT_TOKEN).build()
 
-    # Команды
+    # Command handlers
     app.add_handler(CommandHandler("start", start_handler))
     app.add_handler(CommandHandler("help", help_handler))
     app.add_handler(CommandHandler("health", health_handler))
     app.add_handler(CommandHandler("labs", labs_handler))
     app.add_handler(CommandHandler("scores", scores_handler))
 
-    # Обработчик текстовых сообщений (не команд)
+    # Message handler for plain text
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
 
-    # Обработчик inline-кнопок
+    # Callback for inline buttons
     app.add_handler(CallbackQueryHandler(button_callback))
 
     app.run_polling()
 
-# --- Telegram‑специфичные обработчики (оборачивают чистые функции) ---
+# --- Telegram handlers ---
 
 async def start_handler(update, context):
-    # Отправляем текст и клавиатуру
     keyboard = [
-        [InlineKeyboardButton("📚 Labs", callback_data="labs"),
-         InlineKeyboardButton("📊 Scores", callback_data="scores")],
-        [InlineKeyboardButton("🏆 Top learners", callback_data="top"),
-         InlineKeyboardButton("✅ Completion", callback_data="completion")]
+        [InlineKeyboardButton("Labs", callback_data="labs"),
+         InlineKeyboardButton("Scores", callback_data="scores")],
+        [InlineKeyboardButton("Top learners", callback_data="top"),
+         InlineKeyboardButton("Completion", callback_data="completion")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text(start(), reply_markup=reply_markup)
@@ -82,17 +71,14 @@ async def labs_handler(update, context):
     await update.message.reply_text(labs())
 
 async def scores_handler(update, context):
-    # Извлекаем аргумент lab из команды
     args = context.args
     lab_id = args[0] if args else None
     await update.message.reply_text(scores(lab_id))
 
 async def message_handler(update, context):
     text = update.message.text
-    # Не обрабатываем, если это команда (фильтр уже отсеял, но на всякий случай)
     if text.startswith('/'):
         return
-    # Вызываем маршрутизатор и отправляем ответ
     response = natural_route(text)
     await update.message.reply_text(response)
 
@@ -111,8 +97,6 @@ async def button_callback(update, context):
     else:
         reply = "Unknown"
     await query.edit_message_text(reply)
-
-# --- Точка входа ---
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
